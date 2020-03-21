@@ -1,7 +1,7 @@
 # Nice Spinner 
 - 依赖
     ```groovy
-    implementation 'com.yey.nice.spinner:library:0.0.9'
+    implementation 'com.yey.nice.spinner:library:0.0.9' 
     ```
 - 属性
 
