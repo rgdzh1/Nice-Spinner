@@ -32,5 +32,5 @@ Thumbs.db
 build/
 
 #jcenter上传删除有用信息
-library/bintray.properties
+bintray.properties
 
