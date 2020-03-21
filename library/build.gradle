@@ -7,8 +7,15 @@ android {
         minSdkVersion 14
         targetSdkVersion 29
         versionCode 1
-        versionName "0.0.8"
+        versionName "0.0.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addStringOption('encoding', 'UTF-8')
+        options.addStringOption('charSet', 'UTF-8')
     }
 
     compileOptions {
