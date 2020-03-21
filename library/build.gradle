@@ -73,6 +73,5 @@ bintray {
         desc = 'nice-spinner'
         licenses = ["Apache-2.0"]
         publish = true
-
     }
 }

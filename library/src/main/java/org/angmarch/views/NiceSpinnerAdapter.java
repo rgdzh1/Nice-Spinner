@@ -37,18 +37,22 @@ public class NiceSpinnerAdapter<T> extends NiceSpinnerBaseAdapter {
 
     @Override
     public int getCount() {
+        //展示的条目个数永远都比源数据长度少一个,因为其中一个数据被展示到了NiceSpinner控件上.
         return items.size() - 1;
     }
 
     @Override
     public T getItem(int position) {
+        // selectedIndex:该值代表Adapter数据源中,上一次被选中的数据对应的list索引值.
+        // 假如,当ListPopupWindow展示第1条目时,上一次所选中selectedIndex =1,
+        // 那么ListPopupWindow第1条目应该展示数据源list中索引为2的数据.
         if (position >= selectedIndex) {
             return items.get(position + 1);
         } else {
             return items.get(position);
         }
     }
-
+    //通过传入索引取出数据源中的数据并返回
     @Override
     public T getItemInDataset(int position) {
         return items.get(position);

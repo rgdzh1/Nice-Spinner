@@ -65,14 +65,10 @@ public class NiceSpinner extends AppCompatTextView {
     private Drawable arrowDrawable;
     private ListPopupWindow popupWindow;
     private NiceSpinnerBaseAdapter adapter;
-
-    private AdapterView.OnItemClickListener onItemClickListener;
-    private AdapterView.OnItemSelectedListener onItemSelectedListener;
     private OnSpinnerItemSelectedListener onSpinnerItemSelectedListener;
-
     private boolean isArrowHidden;
-    private int textColor;
-    private int backgroundSelector;
+    private int textColor;//下拉框条目中字体颜色,和NiceSpinner中字体颜色
+    private int backgroundSelector;//下拉框条目的背景色,和NiceSpinner的背景色
     private int arrowDrawableTint;
     private int displayHeight;
     private int parentVerticalOffset;
@@ -120,12 +116,15 @@ public class NiceSpinner extends AppCompatTextView {
             Bundle bundle = (Bundle) savedState;
             selectedIndex = bundle.getInt(SELECTED_INDEX);
             if (adapter != null) {
+                //将被选中索引对应的数据填充到NiceSpinner中
                 setTextInternal(selectedTextFormatter.format(adapter.getItemInDataset(selectedIndex)).toString());
+                //adapter中更新选中的索引
                 adapter.setSelectedIndex(selectedIndex);
             }
 
             if (bundle.getBoolean(IS_POPUP_SHOWING)) {
                 if (popupWindow != null) {
+                    //post() 参数为传入一个方法, 该方法将在主线程中运行.
                     // Post the show request into the looper to avoid bad token exception
                     post(this::showDropDown);
                 }
@@ -141,90 +140,84 @@ public class NiceSpinner extends AppCompatTextView {
         Resources resources = getResources();
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.NiceSpinner);
         int defaultPadding = resources.getDimensionPixelSize(R.dimen.one_and_a_half_grid_unit);
-//        setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
-
-        setPadding(resources.getDimensionPixelSize(R.dimen.three_grid_unit), defaultPadding, defaultPadding,
-                defaultPadding);
+        //setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        setPadding(resources.getDimensionPixelSize(R.dimen.three_grid_unit), defaultPadding, defaultPadding, defaultPadding);
         setClickable(true);
         backgroundSelector = typedArray.getResourceId(R.styleable.NiceSpinner_backgroundSelector, R.drawable.selector);
+        //为NiceSpinner控件设置背景色
         setBackgroundResource(backgroundSelector);
         textColor = typedArray.getColor(R.styleable.NiceSpinner_textTint, getDefaultTextColor(context));
+        //设置NiceSpinner中字体颜色
         setTextColor(textColor);
+        //创建ListPopupWindow
         popupWindow = new ListPopupWindow(context);
+        //点击回调事件
         popupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // The selected item is not displayed within the list, so when the selected position is equal to
                 // the one of the currently selected item it gets shifted to the next item.
+
+                // selectedIndex:该值代表Adapter数据源中,上一次被选中的数据对应的list索引值.
+                // ListPopupWindow中被选中的条目索引值position,大于或者selectedIndex时,
+                // 将position处理之后,转为被选中条目所对应的数据在数据源list中对应的索引值.
+                // 这个地方有点绕,可以举例子来理解,比如数据源中数据为{A,B,C,D}
+                // 展示时NiceSpinner控件出现"A",此时ListPopupWindow中三个条目分别为{B,C,D}
+                // 当点击ListPopupWindow中第0个条目时,该条目中数据"B"对应的list数据源中索引其实为1,也就是selectedIndex=1.
+                // 而当再次展示ListPopupWindow时, 因为selectedIndex=1,ListPopupWindow条目为0依旧展示数据源中0索引对应的数据"A",NiceSpinner控件展示数据"B"
+                // 但条目1展示的数据,看NiceSpinnerAdapter中getItem()方法可知道,此时应该展示list数据源中索引为2对应的值"C".
                 if (position >= selectedIndex && position < adapter.getCount()) {
                     position++;
                 }
+                // selectedIndex 为当前选中数据在数据源中对应的list的索引值.
                 selectedIndex = position;
-
+                // 选中之后的回调方法, 将被选中数据的list索引传出去.
                 if (onSpinnerItemSelectedListener != null) {
                     onSpinnerItemSelectedListener.onItemSelected(NiceSpinner.this, view, position, id);
                 }
-
-                if (onItemClickListener != null) {
-                    onItemClickListener.onItemClick(parent, view, position, id);
-                }
-
-                if (onItemSelectedListener != null) {
-                    onItemSelectedListener.onItemSelected(parent, view, position, id);
-                }
-
+                // 将当前选中数据在数据源中对应的list的索引值,设置到NiceSpinnerBaseAdapter中
                 adapter.setSelectedIndex(position);
-
+                // 通过索引取得list中的数据,将数据展示到NiceSpinner上
                 setTextInternal(adapter.getItemInDataset(position));
-
+                // 选中数据之后让ListPopupWindow消失
                 dismissDropDown();
             }
         });
-
+        // 是否触摸别的地方PopupWindow消失
         popupWindow.setModal(true);
-
+        // ListPopupWindow消失的回调
         popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
+                // 如果箭头没有隐藏
                 if (!isArrowHidden) {
+                    // 此时箭头应该执行向下动画
                     animateArrow(false);
                 }
             }
         });
-
+        // 是否展示箭头
         isArrowHidden = typedArray.getBoolean(R.styleable.NiceSpinner_hideArrow, false);
+        // 箭头颜色
         arrowDrawableTint = typedArray.getColor(R.styleable.NiceSpinner_arrowTint, getResources().getColor(android.R.color.black));
+        // 箭头图片资源
         arrowDrawableResId = typedArray.getResourceId(R.styleable.NiceSpinner_arrowDrawable, R.drawable.arrow);
-        dropDownListPaddingBottom =
-                typedArray.getDimensionPixelSize(R.styleable.NiceSpinner_dropDownListPaddingBottom, 0);
-        horizontalAlignment = PopUpTextAlignment.fromId(
-                typedArray.getInt(R.styleable.NiceSpinner_popupTextAlignment, PopUpTextAlignment.CENTER.ordinal())
-        );
-
+        //
+        dropDownListPaddingBottom = typedArray.getDimensionPixelSize(R.styleable.NiceSpinner_dropDownListPaddingBottom, 0);
+        // 这个是条目中数据的对齐方式
+        horizontalAlignment = PopUpTextAlignment.fromId(typedArray.getInt(R.styleable.NiceSpinner_popupTextAlignment, PopUpTextAlignment.CENTER.ordinal()));
+        // 从xml资源中获取数组 <string-array name="courses"><item>English</item></string-array>
         CharSequence[] entries = typedArray.getTextArray(R.styleable.NiceSpinner_entries);
         if (entries != null) {
+            //开始设置数据了
             attachDataSource(Arrays.asList(entries));
         }
-
         typedArray.recycle();
-
         measureDisplayHeight();
-
     }
 
-    private void measureDisplayHeight() {
-        displayHeight = getContext().getResources().getDisplayMetrics().heightPixels;
-    }
 
-    private int getParentVerticalOffset() {
-        if (parentVerticalOffset > 0) {
-            return parentVerticalOffset;
-        }
-        int[] locationOnScreen = new int[2];
-        getLocationOnScreen(locationOnScreen);
-        return parentVerticalOffset = locationOnScreen[VERTICAL_OFFSET];
-    }
-
+    // 当窗体销毁,结束动画
     @Override
     protected void onDetachedFromWindow() {
         if (arrowAnimator != null) {
@@ -237,10 +230,17 @@ public class NiceSpinner extends AppCompatTextView {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+            // 创建时候初始化
             onVisibilityChanged(this, getVisibility());
         }
     }
 
+    /**
+     * 主要是初始化箭头,以及设置箭头在NiceSpinner右侧
+     *
+     * @param changedView
+     * @param visibility
+     */
     @Override
     protected void onVisibilityChanged(View changedView, int visibility) {
         super.onVisibilityChanged(changedView, visibility);
@@ -248,6 +248,12 @@ public class NiceSpinner extends AppCompatTextView {
         setArrowDrawableOrHide(arrowDrawable);
     }
 
+    /**
+     * 初始化箭头
+     *
+     * @param drawableTint
+     * @return
+     */
     private Drawable initArrowDrawable(int drawableTint) {
         if (arrowDrawableResId == 0) return null;
         Drawable drawable = ContextCompat.getDrawable(getContext(), arrowDrawableResId);
@@ -261,6 +267,11 @@ public class NiceSpinner extends AppCompatTextView {
         return drawable;
     }
 
+    /**
+     * 设置箭头是否展示 isArrowHidden fals 不展示 true 展示
+     *
+     * @param drawable
+     */
     private void setArrowDrawableOrHide(Drawable drawable) {
         if (!isArrowHidden && drawable != null) {
             setCompoundDrawablesWithIntrinsicBounds(null, null, drawable, null);
@@ -269,6 +280,12 @@ public class NiceSpinner extends AppCompatTextView {
         }
     }
 
+    /**
+     * 如何获取控件默认颜色
+     *
+     * @param context
+     * @return
+     */
     private int getDefaultTextColor(Context context) {
         TypedValue typedValue = new TypedValue();
         context.getTheme()
@@ -313,14 +330,18 @@ public class NiceSpinner extends AppCompatTextView {
 
     /**
      * Set the default spinner item using its index
+     * 这个方法可以手动设置数据源中哪条数据可以自己展示到 NiceSpinner 上.
      *
      * @param position the item's position
      */
     public void setSelectedIndex(int position) {
         if (adapter != null) {
             if (position >= 0 && position <= adapter.getCount()) {
+                // 更新Adapter中selectedIndex的值
                 adapter.setSelectedIndex(position);
+                //上一次选中的item条目对应的数据, 对应的list数据源中对应的索引值
                 selectedIndex = position;
+                //通过传入的索引值, 取出list中对应的数据
                 setTextInternal(selectedTextFormatter.format(adapter.getItemInDataset(position)).toString());
             } else {
                 throw new IllegalArgumentException("Position must be lower than adapter count!");
@@ -328,24 +349,12 @@ public class NiceSpinner extends AppCompatTextView {
         }
     }
 
-
-
     /**
-     * @deprecated use setOnSpinnerItemSelectedListener instead.
+     * 为 NiceSpinner 设置数据
+     *
+     * @param list
+     * @param <T>
      */
-    @Deprecated
-    public void addOnItemClickListener(AdapterView.OnItemClickListener onItemClickListener) {
-        this.onItemClickListener = onItemClickListener;
-    }
-
-    /**
-     * @deprecated use setOnSpinnerItemSelectedListener instead.
-     */
-    @Deprecated
-    public void setOnItemSelectedListener(AdapterView.OnItemSelectedListener onItemSelectedListener) {
-        this.onItemSelectedListener = onItemSelectedListener;
-    }
-
     public <T> void attachDataSource(@NonNull List<T> list) {
         adapter = new NiceSpinnerAdapter<>(getContext(), list, textColor, backgroundSelector, spinnerTextFormatter, horizontalAlignment);
         setAdapterInternal(adapter);
@@ -361,9 +370,16 @@ public class NiceSpinner extends AppCompatTextView {
         return horizontalAlignment;
     }
 
+    /**
+     * 为 ListPopupWindow 设置Adapter
+     *
+     * @param adapter
+     * @param <T>
+     */
     private <T> void setAdapterInternal(NiceSpinnerBaseAdapter<T> adapter) {
         if (adapter.getCount() >= 0) {
             // If the adapter needs to be set again, ensure to reset the selected index as well
+            //当重新设置Adapter的时候需要将所选数据对应的所以置为0
             selectedIndex = 0;
             popupWindow.setAdapter(adapter);
             setTextInternal(adapter.getItemInDataset(selectedIndex));
@@ -372,16 +388,26 @@ public class NiceSpinner extends AppCompatTextView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        // 如果该视图可用
+        // 事件为Up事件
         if (isEnabled() && event.getAction() == MotionEvent.ACTION_UP) {
+            // ListPopupWindow没有展示且adapter中有数据
             if (!popupWindow.isShowing() && adapter.getCount() > 0) {
+                //展示ListPopupWindow
                 showDropDown();
             } else {
+                //隐藏
                 dismissDropDown();
             }
         }
         return super.onTouchEvent(event);
     }
 
+    /**
+     * 箭头的动画
+     *
+     * @param shouldRotateUp
+     */
     private void animateArrow(boolean shouldRotateUp) {
         int start = shouldRotateUp ? 0 : MAX_LEVEL;
         int end = shouldRotateUp ? MAX_LEVEL : 0;
@@ -390,6 +416,10 @@ public class NiceSpinner extends AppCompatTextView {
         arrowAnimator.start();
     }
 
+    /**
+     * 隐藏ListPopupWindow
+     * 箭头执行隐藏动画
+     */
     public void dismissDropDown() {
         if (!isArrowHidden) {
             animateArrow(false);
@@ -397,14 +427,20 @@ public class NiceSpinner extends AppCompatTextView {
         popupWindow.dismiss();
     }
 
+    /**
+     * 展示ListPopupWindow
+     * 箭头执行展示动画
+     */
     public void showDropDown() {
         if (!isArrowHidden) {
             animateArrow(true);
         }
+        //定位
         popupWindow.setAnchorView(this);
+        //展示
         popupWindow.show();
         final ListView listView = popupWindow.getListView();
-        if(listView != null) {
+        if (listView != null) {
             listView.setVerticalScrollBarEnabled(false);
             listView.setHorizontalScrollBarEnabled(false);
             listView.setVerticalFadingEdgeEnabled(false);
@@ -413,16 +449,48 @@ public class NiceSpinner extends AppCompatTextView {
     }
 
 
-    private int getPopUpHeight() {
-        return Math.max(verticalSpaceBelow(), verticalSpaceAbove());
+
+
+    /**
+     * 获取屏幕高度
+     */
+    private void measureDisplayHeight() {
+        displayHeight = getContext().getResources().getDisplayMetrics().heightPixels;
     }
 
+    /**
+     * 获取NiceSpinner控件在屏幕左上角的垂直高度
+     * @return
+     */
+    private int getParentVerticalOffset() {
+        if (parentVerticalOffset > 0) {
+            return parentVerticalOffset;
+        }
+        int[] locationOnScreen = new int[2];
+        //获取到的是View左上顶点在屏幕中的绝对位置.(屏幕范围包括状态栏).
+        getLocationOnScreen(locationOnScreen);
+        return parentVerticalOffset = locationOnScreen[VERTICAL_OFFSET];
+    }
+
+    /**
+     * 屏幕左上角坐标
+     * @return
+     */
     private int verticalSpaceAbove() {
         return getParentVerticalOffset();
     }
 
+    /**
+     * 获取ListPopupWindow高度
+     * 屏幕像素- 控件距离屏幕左上角距离-控件高度
+     * @return
+     */
     private int verticalSpaceBelow() {
         return displayHeight - getParentVerticalOffset() - getMeasuredHeight();
+    }
+
+    private int getPopUpHeight() {
+        return Math.max(verticalSpaceBelow(), verticalSpaceAbove());
     }
 
     public void setTintColor(@ColorRes int resId) {
@@ -468,13 +536,14 @@ public class NiceSpinner extends AppCompatTextView {
     }
 
 
-    public void performItemClick( int position,boolean showDropdown) {
-        if(showDropdown) showDropDown();
+    public void performItemClick(int position, boolean showDropdown) {
+        if (showDropdown) showDropDown();
         setSelectedIndex(position);
     }
 
     /**
      * only applicable when popup is shown .
+     *
      * @param view
      * @param position
      * @param id
@@ -482,7 +551,7 @@ public class NiceSpinner extends AppCompatTextView {
     public void performItemClick(View view, int position, int id) {
         showDropDown();
         final ListView listView = popupWindow.getListView();
-        if(listView != null) {
+        if (listView != null) {
             listView.performItemClick(view, position, id);
         }
     }
@@ -494,7 +563,5 @@ public class NiceSpinner extends AppCompatTextView {
     public void setOnSpinnerItemSelectedListener(OnSpinnerItemSelectedListener onSpinnerItemSelectedListener) {
         this.onSpinnerItemSelectedListener = onSpinnerItemSelectedListener;
     }
-
-
 }
 

@@ -35,7 +35,7 @@ public abstract class NiceSpinnerBaseAdapter<T> extends BaseAdapter {
     private int textColor;
     private int backgroundSelector;
 
-    int selectedIndex;
+    int selectedIndex; //该值代表Adapter数据源中,上一次被选中的数据对应的list索引值.
 
     NiceSpinnerBaseAdapter(
             Context context,
