@@ -12,7 +12,7 @@
 | arrowDrawable| reference或color| 箭头图片资源|
 |backgroundSelector|integer|下拉框条目的背景色,和NiceSpinner的背景色|
 |textTint|color|下拉框中内容颜色|
-|popupTextAlignment|枚举|下拉框中,内容水平对齐的方式|
+|popupTextAlignment|enum|下拉框中,内容水平对齐的方式|
 |entries|reference|通过xml资源引用的方式为控件传入数据源|
 |popup_bg_color|reference|下拉框背景颜色|
 |popup_width|dimension,reference|下拉框宽度|
@@ -50,4 +50,5 @@
     });
     ```
 - 实例
+
     ![alt tag](nice-spinner.gif)  
