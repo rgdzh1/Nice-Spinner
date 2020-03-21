@@ -8,7 +8,7 @@
 
     <org.angmarch.views.NiceSpinner
         android:id="@+id/nice_spinner"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="8dp"
@@ -46,6 +46,7 @@
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         app:arrowTint="@color/colorPrimary"
+        app:popup_height="100dp"
         app:backgroundSelector="@drawable/background_selector"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

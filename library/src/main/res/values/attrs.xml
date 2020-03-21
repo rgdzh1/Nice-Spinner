@@ -22,7 +22,7 @@
         <attr name="popup_width" format="dimension|reference" />
         <!--        PopupWindowList高度-->
         <attr name="popup_height" format="reference|dimension" />
-        <!--        PopupWindowList 锚点控件垂直偏移量-->
+        <!--        PopupWindowList 锚点控件水平偏移量-->
         <attr name="popup_horizontal_offset" format="reference|dimension" />
         <!--        PopupWindowList 锚点控件水平偏移量-->
         <attr name="popup_vertical_offset" format="reference|dimension" />
