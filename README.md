@@ -36,7 +36,7 @@
         app:popup_vertical_offset="10dp" />
     ```
     ```java
-    //设置资源时也可以使用entries这个属性来为控件设置数据源
+    //也可以使用entries这个属性来为控件设置数据源
     List<String> dataset = new LinkedList<>(Arrays.asList("One", "Two", "Three", "Four", "Five"));
     //设置数据源  
     spinner.attachDataSource(dataset);
