@@ -1,24 +1,13 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-        google()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.1'
-    }
-}
-
 android {
     compileSdkVersion 29
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 29
-
+        versionCode 1
+        versionName "0.0.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -36,42 +25,6 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'org.assertj:assertj-core:3.12.2'
 }
-
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
-//compile 'group:libName:version'
-//group(组名字)
-group = "com.yey.nice.spinner"
-//libName(库的名字)
-def libName = "Nice-Spinner"
-//version(版本号)
-version = "0.0.5"
-//生成源文件
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-//上传到jCenter所需要的源码文件
-artifacts {
-    archives sourcesJar
-}
-//上传到JCenter
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-bintray {
-    //读取 local.properties 文件里面的 bintray.user
-    user = properties.getProperty("bintray.user")
-    //读取 local.properties 文件里面的 bintray.apikey
-    key = properties.getProperty("bintray.apikey")
-    configurations = ['archives']
-    pkg {
-        //所创建的Maven类型仓库的名称
-        repo = "Yey"
-        //库的名字
-        name = libName
-        //项目描述
-        desc = 'nice-spinner'
-        licenses = ["Apache-2.0"]
-        publish = true
-    }
-}
+//必须放这里,不然提示这个错误
+//Caused by: java.lang.NullPointerException: android.compileSdkVersion is missing!
+apply from: "bintrayUpload.gradle"
