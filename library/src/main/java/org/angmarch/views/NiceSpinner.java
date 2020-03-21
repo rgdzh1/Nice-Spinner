@@ -14,6 +14,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.PopupWindow;
@@ -68,11 +69,11 @@ public class NiceSpinner extends AppCompatTextView {
     private OnSpinnerItemSelectedListener onSpinnerItemSelectedListener;
     private boolean isArrowHidden;
     private int textColor;//下拉框条目中字体颜色,和NiceSpinner中字体颜色
+    private int mPopupBgColor;//下拉框条目中字体颜色,和NiceSpinner中字体颜色
     private int backgroundSelector;//下拉框条目的背景色,和NiceSpinner的背景色
     private int arrowDrawableTint;
     private int displayHeight;
     private int parentVerticalOffset;
-    private int dropDownListPaddingBottom;
     private @DrawableRes
     int arrowDrawableResId;
     private SpinnerTextFormatter spinnerTextFormatter = new SimpleSpinnerTextFormatter();
@@ -81,6 +82,11 @@ public class NiceSpinner extends AppCompatTextView {
 
     @Nullable
     private ObjectAnimator arrowAnimator = null;
+    private int mPupopWidth;
+    private int mPupopHeight;
+    private int mPupopVerticalOffset;
+    private int mPupopHorizontalOffset;
+    private int mPopupAnim;
 
     public NiceSpinner(Context context) {
         super(context);
@@ -95,6 +101,7 @@ public class NiceSpinner extends AppCompatTextView {
     public NiceSpinner(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
+
     }
 
     @Override
@@ -147,10 +154,53 @@ public class NiceSpinner extends AppCompatTextView {
         //为NiceSpinner控件设置背景色
         setBackgroundResource(backgroundSelector);
         textColor = typedArray.getColor(R.styleable.NiceSpinner_textTint, getDefaultTextColor(context));
+        //PopupWindow背景颜色
+        mPopupBgColor = typedArray.getResourceId(R.styleable.NiceSpinner_popup_bg_color, android.R.color.white);
+        //PopupWindowList宽度
+        mPupopWidth = typedArray.getDimensionPixelSize(R.styleable.NiceSpinner_popup_width, 0);
+        //PopupWindowList高度
+        mPupopHeight = typedArray.getDimensionPixelSize(R.styleable.NiceSpinner_popup_height, 0);
+        //PopupWindowList 锚点控件垂直偏移量
+        mPupopVerticalOffset = typedArray.getDimensionPixelSize(R.styleable.NiceSpinner_popup_vertical_offset, 0);
+        //PopupWindowList 锚点控件水平偏移量
+        mPupopHorizontalOffset = typedArray.getDimensionPixelSize(R.styleable.NiceSpinner_popup_horizontal_offset, 0);
+        //PopupWindowList 入场动画
+        mPopupAnim = typedArray.getResourceId(R.styleable.NiceSpinner_popup_anim, R.style.pop_animation);
+        //PopupWindowList 出场动画
         //设置NiceSpinner中字体颜色
         setTextColor(textColor);
+        //初始化PopupWindow
+        initPopup(context);
+        // 是否展示箭头
+        isArrowHidden = typedArray.getBoolean(R.styleable.NiceSpinner_hideArrow, false);
+        // 箭头颜色
+        arrowDrawableTint = typedArray.getColor(R.styleable.NiceSpinner_arrowTint, getResources().getColor(android.R.color.black));
+        // 箭头图片资源
+        arrowDrawableResId = typedArray.getResourceId(R.styleable.NiceSpinner_arrowDrawable, R.drawable.arrow);
+        // 这个是条目中数据的对齐方式
+        horizontalAlignment = PopUpTextAlignment.fromId(typedArray.getInt(R.styleable.NiceSpinner_popupTextAlignment, PopUpTextAlignment.CENTER.ordinal()));
+        // 从xml资源中获取数组 <string-array name="courses"><item>English</item></string-array>
+        CharSequence[] entries = typedArray.getTextArray(R.styleable.NiceSpinner_entries);
+        if (entries != null) {
+            //开始设置数据了
+            attachDataSource(Arrays.asList(entries));
+        }
+        typedArray.recycle();
+        measureDisplayHeight();
+    }
+
+    /**
+     * 初始化PopupWindow设置
+     *
+     * @param context
+     */
+    private void initPopup(Context context) {
         //创建ListPopupWindow
         popupWindow = new ListPopupWindow(context);
+        //为PopupWindow设置背景色
+        popupWindow.setBackgroundDrawable(getResources().getDrawable(mPopupBgColor));
+        //设置动画为PopupWindow
+        popupWindow.setAnimationStyle(mPopupAnim);
         //点击回调事件
         popupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -196,26 +246,21 @@ public class NiceSpinner extends AppCompatTextView {
                 }
             }
         });
-        // 是否展示箭头
-        isArrowHidden = typedArray.getBoolean(R.styleable.NiceSpinner_hideArrow, false);
-        // 箭头颜色
-        arrowDrawableTint = typedArray.getColor(R.styleable.NiceSpinner_arrowTint, getResources().getColor(android.R.color.black));
-        // 箭头图片资源
-        arrowDrawableResId = typedArray.getResourceId(R.styleable.NiceSpinner_arrowDrawable, R.drawable.arrow);
-        //
-        dropDownListPaddingBottom = typedArray.getDimensionPixelSize(R.styleable.NiceSpinner_dropDownListPaddingBottom, 0);
-        // 这个是条目中数据的对齐方式
-        horizontalAlignment = PopUpTextAlignment.fromId(typedArray.getInt(R.styleable.NiceSpinner_popupTextAlignment, PopUpTextAlignment.CENTER.ordinal()));
-        // 从xml资源中获取数组 <string-array name="courses"><item>English</item></string-array>
-        CharSequence[] entries = typedArray.getTextArray(R.styleable.NiceSpinner_entries);
-        if (entries != null) {
-            //开始设置数据了
-            attachDataSource(Arrays.asList(entries));
-        }
-        typedArray.recycle();
-        measureDisplayHeight();
     }
 
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        //ListPopupWindow 设置宽高
+        if (mPupopHeight == 0) {
+            mPupopHeight = this.getHeight() * 4;
+        }
+        if (mPupopWidth == 0) {
+            mPupopWidth = this.getWidth();
+        }
+        popupWindow.setWidth(mPupopWidth);
+        popupWindow.setHeight(mPupopHeight);
+    }
 
     // 当窗体销毁,结束动画
     @Override
@@ -437,18 +482,22 @@ public class NiceSpinner extends AppCompatTextView {
         }
         //定位
         popupWindow.setAnchorView(this);
+        //设置偏移量
+        popupWindow.setHorizontalOffset(mPupopHorizontalOffset);
+        popupWindow.setVerticalOffset(mPupopVerticalOffset);
         //展示
         popupWindow.show();
         final ListView listView = popupWindow.getListView();
         if (listView != null) {
+            // 去除滑动条
             listView.setVerticalScrollBarEnabled(false);
             listView.setHorizontalScrollBarEnabled(false);
             listView.setVerticalFadingEdgeEnabled(false);
             listView.setHorizontalFadingEdgeEnabled(false);
+            // 去除ListView阴影
+            listView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         }
     }
-
-
 
 
     /**
@@ -460,6 +509,7 @@ public class NiceSpinner extends AppCompatTextView {
 
     /**
      * 获取NiceSpinner控件在屏幕左上角的垂直高度
+     *
      * @return
      */
     private int getParentVerticalOffset() {
@@ -474,6 +524,7 @@ public class NiceSpinner extends AppCompatTextView {
 
     /**
      * 屏幕左上角坐标
+     *
      * @return
      */
     private int verticalSpaceAbove() {
@@ -483,6 +534,7 @@ public class NiceSpinner extends AppCompatTextView {
     /**
      * 获取ListPopupWindow高度
      * 屏幕像素- 控件距离屏幕左上角距离-控件高度
+     *
      * @return
      */
     private int verticalSpaceBelow() {
@@ -517,14 +569,6 @@ public class NiceSpinner extends AppCompatTextView {
 
     public boolean isArrowHidden() {
         return isArrowHidden;
-    }
-
-    public void setDropDownListPaddingBottom(int paddingBottom) {
-        dropDownListPaddingBottom = paddingBottom;
-    }
-
-    public int getDropDownListPaddingBottom() {
-        return dropDownListPaddingBottom;
     }
 
     public void setSpinnerTextFormatter(SpinnerTextFormatter spinnerTextFormatter) {

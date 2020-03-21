@@ -10,10 +10,23 @@
         <attr name="arrowTint" format="color" />
         <attr name="hideArrow" format="boolean" />
         <attr name="arrowDrawable" format="reference|color" />
-        <attr name="dropDownListPaddingBottom" format="dimension" />
+        <!--        <attr name="dropDownListPaddingBottom" format="dimension" />-->
         <attr name="backgroundSelector" format="integer" />
         <attr name="textTint" format="color" />
         <attr name="popupTextAlignment" />
         <attr name="entries" format="reference" />
+
+        <!--        PopupWindowList背景-->
+        <attr name="popup_bg_color" format="reference" />
+        <!--        PopupWindowList宽度-->
+        <attr name="popup_width" format="dimension|reference" />
+        <!--        PopupWindowList高度-->
+        <attr name="popup_height" format="reference|dimension" />
+        <!--        PopupWindowList 锚点控件垂直偏移量-->
+        <attr name="popup_horizontal_offset" format="reference|dimension" />
+        <!--        PopupWindowList 锚点控件水平偏移量-->
+        <attr name="popup_vertical_offset" format="reference|dimension" />
+        <!--        PopupWindowList 入场出场动画-->
+        <attr name="popup_anim" format="reference" />
     </declare-styleable>
 </resources>
