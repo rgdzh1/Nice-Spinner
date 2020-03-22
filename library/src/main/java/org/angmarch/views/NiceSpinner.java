@@ -437,7 +437,7 @@ public class NiceSpinner extends AppCompatTextView {
         // 事件为Up事件
         if (isEnabled() && event.getAction() == MotionEvent.ACTION_UP) {
             // ListPopupWindow没有展示且adapter中有数据
-            if (!popupWindow.isShowing() && adapter.getCount() > 0) {
+            if (!popupWindow.isShowing() && adapter != null && adapter.getCount() > 0) {
                 //展示ListPopupWindow
                 showDropDown();
             } else {
@@ -509,6 +509,7 @@ public class NiceSpinner extends AppCompatTextView {
 
     /**
      * 获取NiceSpinner控件在屏幕左上角的垂直高度
+     * 该方法已经废弃
      *
      * @return
      */
@@ -534,9 +535,11 @@ public class NiceSpinner extends AppCompatTextView {
     /**
      * 获取ListPopupWindow高度
      * 屏幕像素- 控件距离屏幕左上角距离-控件高度
+     * 该方法废弃,不能用
      *
      * @return
      */
+    @Deprecated
     private int verticalSpaceBelow() {
         return displayHeight - getParentVerticalOffset() - getMeasuredHeight();
     }
