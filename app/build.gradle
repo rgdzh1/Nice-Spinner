@@ -17,8 +17,8 @@ android {
 }
 
 dependencies {
-    implementation project(":library")
-
+//    implementation project(":library")
+    implementation 'com.yey.nice.spinner:library:0.0.9'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 }
