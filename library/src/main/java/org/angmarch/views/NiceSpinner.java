@@ -210,7 +210,7 @@ public class NiceSpinner extends AppCompatTextView {
                 // the one of the currently selected item it gets shifted to the next item.
 
                 // selectedIndex:该值代表Adapter数据源中,上一次被选中的数据对应的list索引值.
-                // ListPopupWindow中被选中的条目索引值position,大于或者selectedIndex时,
+                // ListPopupWindow中被选中的条目索引值position,大于或者等于selectedIndex时,
                 // 将position处理之后,转为被选中条目所对应的数据在数据源list中对应的索引值.
                 // 这个地方有点绕,可以举例子来理解,比如数据源中数据为{A,B,C,D}
                 // 展示时NiceSpinner控件出现"A",此时ListPopupWindow中三个条目分别为{B,C,D}
@@ -429,6 +429,10 @@ public class NiceSpinner extends AppCompatTextView {
             selectedIndex = 0;
             popupWindow.setAdapter(adapter);
             setTextInternal(adapter.getItemInDataset(selectedIndex));
+            //当设置Adapter得时候, 自己回调下方法比较好
+            if (onSpinnerItemSelectedListener != null) {
+                onSpinnerItemSelectedListener.onItemSelected(NiceSpinner.this, NiceSpinner.this, 0, 0);
+            }
         }
     }
 
